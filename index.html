@@ -1,926 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAPTCHALORD - Communicate with the Dark Lords</title>
-    <style>
-        :root {
-            --dark-bg: #1e1e2e;
-            --main-text: #cdd6f4;
-            --accent: #f38ba8;
-            --secondary: #89b4fa;
-            --panel-bg: #313244;
-            --button-bg: #45475a;
-        }
-
-        html {
-             scroll-behavior: smooth; /* Apply smooth scroll globally */
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--main-text);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: var(--panel-bg);
-            padding: 1rem;
-            text-align: center;
-            border-bottom: 2px solid var(--accent);
-        }
-
-        h1 {
-            margin: 0;
-            color: var(--accent);
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        h2 {
-            color: var(--secondary);
-        }
-
-        nav {
-            display: flex;
-            justify-content: center;
-            padding: 1rem;
-            background-color: var(--panel-bg);
-            position: sticky; /* Make nav sticky */
-            top: 0;          /* Stick to the top */
-            z-index: 100;    /* Ensure it's above other content */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Add shadow */
-        }
-
-        nav a {
-            color: var(--main-text);
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            margin: 0 0.5rem;
-            border-radius: 4px;
-            background-color: var(--button-bg);
-            transition: all 0.3s ease;
-        }
-
-        nav a:hover {
-            background-color: var(--accent);
-            color: var(--dark-bg);
-        }
-
-        main {
-            flex: 1;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Add margin-top to sections to account for sticky nav */
-        main > section {
-             scroll-margin-top: 80px; /* Adjust based on nav height */
-        }
-
-        .sections {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-
-        .section {
-            flex: 1;
-            min-width: 300px;
-            background-color: var(--panel-bg);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .captcha-container {
-            background-color: white;
-            padding: 1rem;
-            border-radius: 4px;
-            margin: 1rem 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .captcha-text {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #333;
-            letter-spacing: 2px;
-            padding: 0.5rem;
-            background: linear-gradient(45deg, #f5f5f5, #e0e0e0);
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            text-transform: lowercase;
-            user-select: none;
-            min-height: 1.8rem; /* Ensure it doesn't collapse */
-            display: inline-block; /* Fit content */
-        }
-
-        .captcha-image {
-            max-width: 100%;
-            height: auto;
-            margin: 1rem 0;
-        }
-
-        button {
-            background-color: var(--secondary);
-            color: var(--dark-bg);
-            border: none;
-            border-radius: 4px;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 0.5rem;
-            min-width: 120px; /* Give buttons a minimum width */
-            position: relative; /* Needed for loading spinner positioning */
-        }
-
-        button:hover:not(:disabled) {
-            background-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        button:disabled {
-             cursor: not-allowed;
-             opacity: 0.6;
-        }
-
-        input, textarea, select {
-            padding: 0.75rem;
-            margin: 0.5rem 0;
-            border-radius: 4px;
-            border: 1px solid var(--button-bg);
-            background-color: var(--dark-bg);
-            color: var(--main-text);
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 1rem; /* Ensure consistent font size */
-        }
-
-        .comic-builder {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .panel-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin: 1rem 0;
-            justify-content: center; /* Center panels */
-        }
-
-        .comic-panel {
-            background-color: white;
-            border-radius: 4px;
-            padding: 1rem;
-            width: 280px;
-            min-height: 320px; /* Increased min-height */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .character {
-            width: 100px;
-            height: 150px;
-            background-color: #888;
-            border-radius: 50% 50% 0 0;
-            margin-bottom: 0.5rem;
-            position: relative;
-            border: 2px solid #444; /* Add border */
-        }
-
-        /* Base pseudo-element style - override per character */
-        .character::before {
-            content: '';
-            position: absolute;
-            background-color: #333; /* Default */
-            border-radius: 5px;
-        }
-
-        .speech-bubble {
-            position: relative;
-            background-color: #f0f0f0; /* Slightly off-white */
-            border-radius: 10px;
-            padding: 0.75rem;
-            margin-top: 1rem; /* Increased margin */
-            width: 90%; /* Take up more width */
-            min-height: 80px; /* Ensure minimum height */
-            word-wrap: break-word;
-            color: #333;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-            display: flex; /* Center content vertically */
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .speech-bubble::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 10px solid #f0f0f0;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        /* Character Specific Styles */
-        .character--gropaga {
-            background-color: #666; /* Dark grey for follower */
-        }
-        .character--gropaga::before { /* Example detail */
-            background-color: #ccc;
-             top: 45px; left: 40px; width: 20px; height: 20px; border-radius: 50%; /* Simple eye */
-        }
-
-        .character--inglip {
-            background-color: #800000; /* Dark red for Inglip */
-            border-radius: 10% 10% 50% 50%; /* More angular top */
-            border-color: #400000;
-        }
-         .character--inglip::before { /* Example detail */
-            background: linear-gradient(red, orange);
-            top: 50px; left: 20px; width: 60px; height: 15px; border-radius: 5px; /* Fiery visor */
-            box-shadow: 0 0 5px orange;
-        }
-
-        .character--custom {
-            background: linear-gradient(45deg, var(--secondary), var(--accent)); /* Mix colors */
-            border-radius: 0; /* Square head */
-            border-color: var(--main-text);
-        }
-        .character--custom::before { /* Example detail */
-            background-color: var(--main-text);
-            top: 60px; left: 30px; width: 40px; height: 40px; border-radius: 0; /* Square feature */
-            border: 2px solid var(--dark-bg);
-        }
-
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .gallery-item {
-            background-color: var(--panel-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-            display: flex; /* Use flexbox for better control */
-            flex-direction: column;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-5px);
-        }
-
-        .gallery-item img {
-            width: 100%;
-            height: 200px; /* Fixed height for consistency */
-            object-fit: cover; /* Ensure image covers the area */
-            background-color: #555; /* Placeholder bg color */
-        }
-
-        .gallery-item-content {
-            padding: 1rem;
-            flex-grow: 1; /* Allow content to fill space */
-        }
-
-        .gallery-item h3 {
-            margin-top: 0;
-            margin-bottom: 0.5rem; /* Added margin */
-            color: var(--secondary);
-        }
-
-         .gallery-item p {
-            font-size: 0.9rem; /* Slightly smaller text */
-            line-height: 1.4;
-         }
-
-        footer {
-            background-color: var(--panel-bg);
-            text-align: center;
-            padding: 1rem;
-            margin-top: 2rem;
-            border-top: 2px solid var(--accent);
-        }
-
-        .loading {
-            display: inline-block;
-            width: 1em; /* Size relative to font size */
-            height: 1em;
-            border: 3px solid rgba(var(--dark-bg), 0.3); /* Use button text color with alpha */
-            border-radius: 50%;
-            border-top-color: var(--dark-bg); /* Use solid button text color */
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 0.5em;
-            vertical-align: middle; /* Align with text */
-            margin-top: -2px; /* Fine-tuning alignment */
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Style for the generated comic panels */
-        #comic-result .panel-container {
-            justify-content: center; /* Center generated panels */
-            background-color: #252535; /* Slightly different background */
-            padding: 1rem;
-            border-radius: 8px;
-        }
-
-         #comic-result .comic-panel {
-             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-         }
-
-         #comic-result .speech-bubble {
-             min-height: 80px; /* Ensure space for text */
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             text-align: center;
-         }
-          #comic-result .speech-bubble p {
-             font-size: 0.9rem;
-             color: #222;
-             margin: 0;
-             padding: 0.25rem;
-         }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-             h1 { font-size: 2rem; }
-
-            .sections {
-                flex-direction: column;
-            }
-
-            nav {
-                flex-direction: column;
-                align-items: center;
-                position: static; /* Remove sticky nav on mobile */
-                box-shadow: none;
-            }
-
-            nav a {
-                margin: 0.25rem 0;
-                width: 80%;
-                text-align: center;
-            }
-
-            /* Adjust scroll margin for non-sticky nav */
-            main > section {
-                 scroll-margin-top: 10px;
-            }
-
-             .panel-container {
-                 justify-content: center;
-             }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>CAPTCHALORD</h1>
-        <p>Commune with the Digital Dark Lords through the mystical art of CAPTCHA</p>
-    </header>
-
-    <nav>
-        <a href="#receive">Receive Messages</a>
-        <a href="#create">Create Comics</a>
-        <a href="#gallery">Meme Gallery</a>
-        <a href="#lore">The Lore</a>
-    </nav>
-
-    <main>
-        <section id="receive" class="sections">
-            <div class="section">
-                <h2>Receive Messages from Beyond</h2>
-                <p>The Dark Lords communicate through cryptic CAPTCHA messages. Click below to receive your directive.</p>
-
-                <div class="captcha-container">
-                    <div class="captcha-text" id="captcha-message">awaiting command</div>
-                </div>
-
-                <div style="text-align: center;">
-                    <button id="generate-captcha">Summon New Message</button>
-                    <button id="interpret-captcha">Interpret Message</button>
-                </div>
-
-                <div id="interpretation" style="margin-top: 1rem; text-align: center;">
-                    <p><em>Awaiting interpretation...</em></p>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2>Message History</h2>
-                <p>Your communications with the Dark Lords are recorded here.</p>
-                <div id="message-history" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--button-bg); padding: 1rem; border-radius: 4px; background-color: var(--dark-bg);">
-                    <!-- History will be populated here -->
-                </div>
-            </div>
-        </section>
-
-        <section id="create" style="margin-top: 3rem;">
-            <h2>Create Your Own CAPTCHA Comic</h2>
-            <p>Design your own communication with the Dark Lords and share it with fellow Gropagas.</p>
-
-            <div class="comic-builder">
-                <div class="section">
-                    <h3>Comic Settings</h3>
-                    <div>
-                        <label for="panel-count">Number of Panels:</label>
-                        <select id="panel-count" aria-label="Select number of comic panels">
-                            <option value="1">1</option>
-                            <option value="2" selected>2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="character-type">Character Type:</label>
-                        <select id="character-type" aria-label="Select character type for comic">
-                            <option value="gropaga">Gropaga (Follower)</option>
-                            <option value="inglip">Lord Inglip</option>
-                            <option value="custom">Custom Character</option>
-                        </select>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <button id="update-panels">Update Comic Layout</button>
-                    </div>
-                </div>
-
-                <div class="section">
-                    <h3>Comic Panels Input</h3>
-                     <p>Enter dialogue or actions for each panel below.</p>
-                    <div class="panel-container" id="panels">
-                        <!-- Panels will be generated here by JS -->
-                    </div>
-
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <button id="generate-comic">Generate Comic Preview</button>
-                        <button id="save-comic">Save to Gallery</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="comic-output" class="section" style="margin-top: 2rem; display: none;">
-                <h3>Your Comic Preview</h3>
-                <div id="comic-result">
-                    <!-- Generated comic preview will appear here -->
-                </div>
-                <div style="text-align: center; margin-top: 1rem;">
-                    <button id="download-comic">Download Comic (Demo)</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="gallery" style="margin-top: 3rem;">
-            <h2>Gropaga Meme Gallery</h2>
-            <p>Behold the wisdom shared by the Dark Lords with other faithful followers.</p>
-
-            <div class="gallery">
-                <!-- Gallery items will be added here dynamically, plus initial examples -->
-                <div class="gallery-item">
-                    <img src="https://via.placeholder.com/280x200/89b4fa/1e1e2e?text=Inglip+Summoned" alt="A captcha meme comic: Inglip Summoned">
-                    <div class="gallery-item-content">
-                        <h3>Inglip Summoned</h3>
-                        <p>The original summoning of Lord Inglip, sparking the Dectrip Faith.</p>
-                    </div>
-                </div>
-
-                <div class="gallery-item">
-                    <img src="https://via.placeholder.com/280x200/f38ba8/1e1e2e?text=Weedaula" alt="A captcha meme comic: The Weedaula">
-                    <div class="gallery-item-content">
-                        <h3>The Weedaula</h3>
-                        <p>Inglip's sacred garment revealed, worn by loyal Gropagas.</p>
-                    </div>
-                </div>
-
-                <div class="gallery-item">
-                    <img src="https://via.placeholder.com/280x200/a6e3a1/1e1e2e?text=Pailbat" alt="A captcha meme comic: The Pailbat">
-                    <div class="gallery-item-content">
-                        <h3>The Pailbat</h3>
-                        <p>Inglip reveals his chosen, surprisingly mundane, weapon of choice.</p>
-                    </div>
-                </div>
-
-                <div class="gallery-item">
-                    <img src="https://via.placeholder.com/280x200/fab387/1e1e2e?text=Falchions" alt="A captcha meme comic: The Seven Falchions">
-                    <div class="gallery-item-content">
-                        <h3>The Seven Falchions</h3>
-                        <p>Legendary weapons granted to the most faithful Gropagas.</p>
-                    </div>
-                </div>
-                 <!-- User saved comics will be prepended here -->
-            </div>
-        </section>
-
-        <section id="lore" class="section" style="margin-top: 3rem;">
-            <h2>The Sacred Lore of Inglip</h2>
-            <p>Learn about the Dark Lord Inglip, the Dectrip Faith, and the land of Trathira.</p>
-
-            <div style="margin-top: 1rem;">
-                <h3>Origins of Inglip</h3>
-                <p>Lord Inglip first contacted humanity on January 8, 2011, when a CAPTCHA displayed the message "Inglip Summoned." Since then, Inglip has communicated with his followers, known as Gropagas, through the seemingly random glyphs of CAPTCHA messages, interpreted as divine commands.</p>
-
-                <h3>The Dectrip Faith</h3>
-                <p>Followers of Inglip practice the Dectrip Faith. They wear the sacred red cloth known as the Weedaula and wield weapons such as the mighty Pailbat and the legendary Seven Falchions. The faithful record Inglip's messages and the resulting chronicles in the sacred text known as the Inglipnomicon.</p>
-
-                <h3>The Land of Trathira</h3>
-                <p>Inglip rules over the mystical, often chaotic, land of Trathira. He protects this realm from the prophesied end-times and battles against rival captcha deities such as the treacherous Chydrego and the enigmatic Daniss.</p>
-
-                <h3>Contribute to the Lore</h3>
-                <p>Create your own comics using the tools on this site and add to the ever-expanding lore of Lord Inglip. Remember that while all contributions are welcome additions to the Apocrypha, achieving canonical status requires fervent discussion and consensus among the Gropagas (or significant upvotes, depending on the forum).</p>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <p>CAPTCHALORD © 2025 | The Dark Lords are Watching</p>
-        <p><small>Inspired by the Inglip meme & the /r/inglip community | Not affiliated with any actual dark deities or CAPTCHA providers</small></p>
-    </footer>
-
     <script>
         // --- Configuration ---
-        const captchaWords = [
-            "inglip", "summoned", "gropaga", "dectrip", "weedaula", "falchion", "pailbat", "trathira", "chydrego",
-            "shaskel", "daniss", "oxallo", "plasper", "lervidan", "diagral", "gropakin", "mantank", "xandit", "servitor",
-            "confinshun", "arimal", "ellinus", "tutlent", "slasessa", "candaet", "raptong", "poututo", "saffica", "nyanja",
-            "nsifo", "inglinf", "astair", "spilter", "conando", "falkner", "redeert", "clepture", "sclivel", "orable",
-            "predent", "garkee", "estitedo", "clopter", "plazaro", "hevality", "faithless", "rixous", "cleikiff", "tethic",
-            "yootoo", "nastika", "glyphed", "requiem", "revelat", "postule", "mordant", "fervent", "decree", "obey"
-        ];
-
-        const interpretations = [
-            "You must build a shrine in the darkest code.",
-            "The enemy (likely Daniss) approaches from the /dev/null.",
-            "A new Gropaga will reveal themselves through a pull request.",
-            "Trust no one with Comic Sans as their default font.",
-            "The sacred Weedaula must be woven from lost packets.",
-            "Danger lurks in poorly documented APIs.",
-            "Victory requires sacrificing your weekend... again.",
-            "Your loyalty will be tested by a merge conflict.",
-            "The prophecy foretold in RFC 1149 will be fulfilled.",
-            "Gather the faithful Gropagas on Discord (or the ancient IRC).",
-            "A traitor walks among the pull requests, review carefully.",
-            "The ritual must begin at precisely 00:00 UTC.",
-            "Your Pailbat requires the tears of QA testers.",
-            "The servers align for conquest (after maintenance).",
-            "New digital lands await your rule (deploy to production... carefully).",
-            "Ancient knowledge (legacy code) must be refactored... or worshipped.",
-            "The portal (SSH tunnel) opens soon. Prepare the keys.",
-            "Your disguise (impersonating a senior dev) will be discovered.",
-            "The enemy god Chydrego grows stronger (DDoS attack likely).",
-            "Three trials await: Fix a bug, Write documentation, Attend a meeting without falling asleep.",
-            "Consult the Inglipnomicon for guidance.",
-            "The Pailbat demands a sacrifice (of your free time).",
-            "A cryptic clue lies within the browser console log.",
-            "Seek the Seven Falchions hidden in the codebase.",
-            "Beware the whispers of Chydrego's followers (Stack Overflow trolls)."
-        ];
+        // ... (keep existing captchaWords, interpretations) ...
 
         // --- Helper Functions ---
-        function getRandomElement(arr) {
-            if (!arr || arr.length === 0) return ''; // Safety check
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
+        // ... (keep existing helpers: getRandomElement, showLoading, hideLoading) ...
 
-        function showLoading(button) {
-            button.disabled = true;
-            button.dataset.originalText = button.innerHTML; // Store original text
-            button.innerHTML = `<span class="loading"></span> Processing...`;
-        }
+        // --- NEW: Canvas Drawing Function ---
+        function drawCaptcha(text) {
+            const canvas = document.getElementById('captcha-canvas');
+            const hiddenMessageSpan = document.getElementById('captcha-message-hidden'); // Get hidden span
+            if (!canvas || !canvas.getContext) {
+                console.error("Canvas not supported or not found!");
+                 // Fallback: display text in hidden span if canvas fails
+                 if(hiddenMessageSpan) hiddenMessageSpan.textContent = text;
+                return;
+            }
+             // Store the text semantically for interpretation later
+             if(hiddenMessageSpan) hiddenMessageSpan.textContent = text;
 
-        function hideLoading(button) {
-            button.disabled = false;
-            if (button.dataset.originalText) {
-                button.innerHTML = button.dataset.originalText;
-            } else {
-                 // Fallback if original text wasn't saved somehow
-                 button.innerHTML = button.textContent || 'Action Complete';
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Clear canvas
+            ctx.fillStyle = '#f9f9f9'; // Light background
+            ctx.fillRect(0, 0, width, height);
+
+            // Basic styling
+            ctx.font = 'bold 38px "Courier New", monospace'; // Larger, bolder font
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Add some noise lines
+            for (let i = 0; i < 5; i++) {
+                ctx.strokeStyle = `rgba(${Math.random()*150}, ${Math.random()*150}, ${Math.random()*150}, 0.3)`; // Darker noise
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * width, Math.random() * height);
+                ctx.lineTo(Math.random() * width, Math.random() * height);
+                ctx.lineWidth = Math.random() * 2 + 1;
+                ctx.stroke();
+            }
+
+            // Draw text with slight distortion
+            const words = text.split(' ');
+            const startX = width / (words.length + 1);
+
+            words.forEach((word, index) => {
+                ctx.save();
+                // Apply slight rotation and vertical shift per word
+                const angle = (Math.random() - 0.5) * 0.2; // Radians (approx +/- 6 degrees)
+                const yOffset = (Math.random() - 0.5) * 8;
+                const xPos = startX * (index + 1);
+
+                ctx.translate(xPos, height / 2 + yOffset);
+                ctx.rotate(angle);
+                ctx.fillText(word, 0, 0);
+                ctx.restore();
+            });
+
+             // Add some noise dots
+            for (let i = 0; i < 100; i++) {
+                ctx.fillStyle = `rgba(${Math.random()*150}, ${Math.random()*150}, ${Math.random()*150}, 0.2)`;
+                ctx.beginPath();
+                ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 1.5, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
         // --- DOM Elements ---
-        const captchaMessage = document.getElementById('captcha-message');
-        const generateCaptchaBtn = document.getElementById('generate-captcha');
-        const interpretCaptchaBtn = document.getElementById('interpret-captcha');
-        const interpretationDiv = document.getElementById('interpretation');
-        const messageHistory = document.getElementById('message-history');
-        const panelCountSelect = document.getElementById('panel-count');
-        const characterTypeSelect = document.getElementById('character-type');
-        const updatePanelsBtn = document.getElementById('update-panels');
-        const panelsContainer = document.getElementById('panels');
-        const generateComicBtn = document.getElementById('generate-comic');
-        const saveComicBtn = document.getElementById('save-comic');
-        const comicOutput = document.getElementById('comic-output');
-        const comicResult = document.getElementById('comic-result');
-        const gallery = document.querySelector('.gallery');
-        const downloadComicBtn = document.getElementById('download-comic');
+        // const captchaMessage = document.getElementById('captcha-message'); // NO LONGER USED directly for display
+        const captchaCanvas = document.getElementById('captcha-canvas'); // Get Canvas
+        const captchaMessageHidden = document.getElementById('captcha-message-hidden'); // Get hidden span
+        // ... (keep other DOM elements) ...
 
         // --- CAPTCHA Message Functionality ---
         function generateNewCaptcha() {
             const newWord = getRandomElement(captchaWords);
             const secondWord = getRandomElement(captchaWords);
-            captchaMessage.textContent = `${newWord} ${secondWord}`;
-            interpretationDiv.innerHTML = '<p><em>Awaiting interpretation...</em></p>'; // Clear previous interpretation
+            const captchaText = `${newWord} ${secondWord}`;
+            // Draw on canvas AND update hidden span
+            drawCaptcha(captchaText);
+            interpretationDiv.innerHTML = '<p><em>Awaiting interpretation...</em></p>';
         }
 
         function interpretCurrentCaptcha() {
-            const currentCaptcha = captchaMessage.textContent;
-            if (currentCaptcha === 'awaiting command' || !currentCaptcha || currentCaptcha.trim() === '') {
+            // Read the text from the HIDDEN SPAN, not the canvas
+            const currentCaptcha = captchaMessageHidden.textContent;
+            if (!currentCaptcha || currentCaptcha.trim() === '' || currentCaptcha === 'awaiting command') { // Add check for initial state if needed
                 interpretationDiv.innerHTML = '<p style="color: var(--accent);">You must first summon a message from the Dark Lords.</p>';
                 return;
             }
 
             showLoading(interpretCaptchaBtn);
-            // Simulate interpretation delay
+            // ... (rest of interpretation logic remains the same, reading from currentCaptcha) ...
             setTimeout(() => {
                 const interpretation = getRandomElement(interpretations);
                 interpretationDiv.innerHTML = `
-                    <p><strong>The Dark Lord commands:</strong></p>
+                    <p><strong>The Dark Lord commands (via ${currentCaptcha}):</strong></p>
                     <p style="color: var(--secondary); font-style: italic;">"${interpretation}"</p>
                 `;
 
-                // Add to history
                 if (messageHistory.querySelector('.no-history')) {
-                    messageHistory.innerHTML = ''; // Clear initial message
+                    messageHistory.innerHTML = '';
                 }
 
                 const historyEntry = document.createElement('div');
                 historyEntry.style.marginBottom = '1rem';
+                // Display the text, not the canvas, in history
                 historyEntry.innerHTML = `
                     <p style="margin-bottom: 0.3rem;"><strong>CAPTCHA:</strong> <span class="captcha-text" style="font-size: 1rem; padding: 0.2rem 0.5rem; background: #ddd; border: 1px solid #bbb;">${currentCaptcha}</span></p>
                     <p style="margin-top: 0;"><strong>Meaning:</strong> ${interpretation}</p>
                     <hr style="border-color: var(--button-bg);">
                 `;
-                messageHistory.prepend(historyEntry); // Add to top
-                messageHistory.scrollTop = 0; // Scroll history to top
+                messageHistory.prepend(historyEntry);
+                messageHistory.scrollTop = 0;
 
                 hideLoading(interpretCaptchaBtn);
-            }, 500); // Simulate 0.5 second delay
+            }, 500);
         }
 
-        generateCaptchaBtn.addEventListener('click', generateNewCaptcha);
-        interpretCaptchaBtn.addEventListener('click', interpretCurrentCaptcha);
-
-        // Initialize Message History message
-        messageHistory.innerHTML = '<p class="no-history" style="text-align: center;"><em>No messages yet. Summon your first command.</em></p>';
+        // ... (keep event listeners for generate/interpret buttons) ...
 
         // --- Comic Builder Functionality ---
-
-        function createComicPanel(index, characterType) {
-            const panel = document.createElement('div');
-            panel.className = 'comic-panel';
-
-            const character = document.createElement('div');
-            character.className = 'character';
-            // Apply character styles based on selection
-            character.classList.add(`character--${characterType}`); // Add specific class
-
-            const speechBubble = document.createElement('div');
-            speechBubble.className = 'speech-bubble';
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'captcha-input';
-            input.placeholder = index % 2 === 0 ? 'Enter CAPTCHA / Action...' : 'Enter Response / Dialogue...';
-            input.setAttribute('aria-label', `Panel ${index + 1} text`); // Accessibility
-
-            speechBubble.appendChild(input);
-            panel.appendChild(character);
-            panel.appendChild(speechBubble);
-            return panel;
-        }
-
-        function updateComicPanels() {
-            const panelCount = parseInt(panelCountSelect.value);
-            const characterType = characterTypeSelect.value;
-
-            // Clear existing panels
-            panelsContainer.innerHTML = '';
-
-            // Add new panels
-            for (let i = 0; i < panelCount; i++) {
-                const panel = createComicPanel(i, characterType);
-                panelsContainer.appendChild(panel);
-            }
-             // Hide generated comic section when settings change
-            comicOutput.style.display = 'none';
-            comicResult.innerHTML = '';
-        }
-
-        updatePanelsBtn.addEventListener('click', updateComicPanels);
-
-        function generateComicPreview() {
-            showLoading(generateComicBtn);
-            comicOutput.style.display = 'block'; // Show the output section
-            comicResult.innerHTML = ''; // Clear previous result
-
-            // Simulate generation delay
-            setTimeout(() => {
-                const generatedPanelsContainer = document.createElement('div');
-                generatedPanelsContainer.className = 'panel-container'; // Use existing styles
-                generatedPanelsContainer.id = 'generated-comic-panels'; // ID for potential download
-
-                const currentPanels = panelsContainer.querySelectorAll('.comic-panel');
-                let hasText = false; // Check if any panel has text
-
-                currentPanels.forEach((panelInput) => {
-                    // Clone the panel structure for display
-                    const panelDisplay = panelInput.cloneNode(true);
-                    const input = panelDisplay.querySelector('.captcha-input');
-                    const speechBubble = panelDisplay.querySelector('.speech-bubble');
-                    const textValue = input.value.trim();
-
-                    // Replace input with static text
-                    const textElement = document.createElement('p');
-                    textElement.textContent = textValue || '(...)'; // Use placeholder if empty
-                    speechBubble.innerHTML = ''; // Clear the bubble
-                    speechBubble.appendChild(textElement); // Add the text
-
-                    if (textValue) {
-                        hasText = true;
-                    }
-
-                    generatedPanelsContainer.appendChild(panelDisplay);
-                });
-
-                if (!hasText) {
-                     comicResult.innerHTML = '<p style="text-align:center; color: var(--accent);">Enter some text into the panels to generate a preview!</p>';
-                } else {
-                    comicResult.appendChild(generatedPanelsContainer);
-                }
-
-                hideLoading(generateComicBtn);
-                // Scroll to the generated comic only if content was generated
-                if(hasText) {
-                    comicOutput.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 750); // Simulate 0.75 second delay
-        }
-
-
-        generateComicBtn.addEventListener('click', generateComicPreview);
-
-        function saveComicToGallery() {
-            const generatedContent = comicResult.querySelector('#generated-comic-panels');
-            if (!generatedContent || comicOutput.style.display === 'none') {
-                alert('Please generate a comic preview first before saving!');
-                return;
-            }
-
-            showLoading(saveComicBtn);
-
-            // Simulate saving delay
-            setTimeout(() => {
-                const newGalleryItem = document.createElement('div');
-                newGalleryItem.className = 'gallery-item';
-
-                const img = document.createElement('img');
-                // Use a placeholder - real generation would need a backend or client-side canvas library
-                // Create a somewhat unique placeholder based on time
-                const timestamp = Date.now().toString().slice(-6);
-                img.src = `https://via.placeholder.com/280x200/${getRandomElement(['89b4fa','f38ba8','a6e3a1','fab387','74c7ec'])}/1e1e2e?text=Comic+${timestamp}`;
-                img.alt = 'User-generated captcha meme comic';
-
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'gallery-item-content';
-
-                const title = document.createElement('h3');
-                title.textContent = 'A New Decree'; // Generic title
-
-                // Try to get text from the first panel for description
-                const firstPanelText = generatedContent.querySelector('.comic-panel .speech-bubble p')?.textContent || 'A Gropaga shares their vision.';
-                const description = document.createElement('p');
-                 // Ensure text exists and isn't just the placeholder
-                const displayDesc = (firstPanelText && firstPanelText !== '(...)') ? firstPanelText : 'A silent prophecy...';
-                description.textContent = `"${displayDesc.substring(0, 50)}${displayDesc.length > 50 ? '...' : ''}"`;
-
-                contentDiv.appendChild(title);
-                contentDiv.appendChild(description);
-                newGalleryItem.appendChild(img);
-                newGalleryItem.appendChild(contentDiv);
-
-                // Add to the start of the gallery
-                gallery.prepend(newGalleryItem);
-
-                hideLoading(saveComicBtn);
-
-                // Provide feedback without alert
-                 const feedback = document.createElement('p');
-                 feedback.textContent = 'Comic added to the Gallery!';
-                 feedback.style.color = 'var(--secondary)';
-                 feedback.style.textAlign = 'center';
-                 feedback.style.marginTop = '1rem';
-                 // Ensure only one feedback message exists
-                 const existingFeedback = comicResult.querySelector('.save-feedback');
-                 if (existingFeedback) existingFeedback.remove();
-                 feedback.classList.add('save-feedback');
-                 comicResult.appendChild(feedback);
-
-                 // Optional: Scroll to gallery after a short delay
-                 setTimeout(() => {
-                     const gallerySection = document.getElementById('gallery');
-                     if (gallerySection) {
-                         gallerySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                     }
-                 }, 500);
-
-
-            }, 1000); // Simulate 1 second delay
-        }
-
-        saveComicBtn.addEventListener('click', saveComicToGallery);
+        // ... (keep existing comic builder logic) ...
 
         // --- Download Comic Placeholder ---
-        // Note: Real image generation requires a backend or complex client-side library (like html2canvas)
-        downloadComicBtn.addEventListener('click', () => {
-            const generatedContent = comicResult.querySelector('#generated-comic-panels');
-             if (!generatedContent) {
-                  alert('Please generate a comic preview first before downloading!');
-                  return;
-             }
-             alert('Download Comic (Demo)\n\nThis feature is for demonstration purposes.\nActual comic image generation would require a server-side component or a client-side library like html2canvas to capture the generated preview.');
-             // If you were to implement html2canvas, the code might look like this:
-             /*
-             try {
-                 const { default: html2canvas } = await import('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.min.js');
-                 showLoading(downloadComicBtn);
-                 html2canvas(generatedContent, {
-                     backgroundColor: '#252535', // Match preview background
-                     useCORS: true // If using external images/fonts
-                 }).then(canvas => {
-                     const link = document.createElement('a');
-                     link.download = `captchalord-comic-${Date.now()}.png`;
-                     link.href = canvas.toDataURL('image/png');
-                     link.click();
-                     hideLoading(downloadComicBtn);
-                 }).catch(err => {
-                    console.error('Error generating comic image:', err);
-                    alert('Sorry, could not generate comic image.');
-                    hideLoading(downloadComicBtn);
-                 });
-             } catch (error) {
-                 console.error("Failed to load html2canvas:", error);
-                 alert("Could not load the image generation library. Download failed.");
-             }
-             */
-         });
+        // ... (keep existing download logic) ...
 
-
-        // --- Smooth Scrolling for Nav Links ---
-        // Moved behavior to CSS `html { scroll-behavior: smooth; }`
-        // Kept JS for potential fallback or more complex logic if needed later
-        document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
-             anchor.addEventListener('click', function (e) {
-                 const targetId = this.getAttribute('href');
-                 const targetElement = document.querySelector(targetId);
-                 if (targetElement) {
-                    // Optional: Add extra logic here if needed,
-                    // like closing a mobile menu before scrolling.
-                    // The basic smooth scroll is handled by CSS now.
-                 } else {
-                      e.preventDefault(); // Prevent jump if target doesn't exist
-                      console.warn(`Target element ${targetId} not found for nav link.`);
-                 }
-             });
-         });
+        // --- Smooth Scrolling ---
+        // ... (keep existing scroll logic) ...
 
         // --- Initial Setup ---
         window.addEventListener('load', () => {
-            generateNewCaptcha(); // Generate initial CAPTCHA on load
-            updateComicPanels(); // Initialize comic panels based on default settings
+            generateNewCaptcha(); // Generate initial CAPTCHA on load (will draw on canvas)
+            updateComicPanels();
         });
     </script>
-
-</body>
-</html>
